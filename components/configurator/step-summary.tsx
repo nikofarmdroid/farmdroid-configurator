@@ -830,13 +830,29 @@ export function StepSummary({ config, priceBreakdown, onReset, initialLead, exis
           </div>
         </div>
 
-        {/* Right: Partner Actions - Takes 2 columns */}
-        <div className="lg:col-span-2">
+        {/* Right: Customer Info + Partner Actions - Takes 2 columns */}
+        <div className="lg:col-span-2 space-y-4">
+          {/* Customer info form */}
+          <LeadCaptureForm
+            config={config}
+            priceBreakdown={priceBreakdown}
+            onSubmit={(lead) => {
+              setLeadData(lead);
+              toast.info("Customer details saved", "You can now save or share the quote");
+            }}
+            initialLead={initialLead}
+            startAsRecognized={Boolean(initialLead)}
+            heading="Customer Details"
+            subheading="Enter your customer's information to create a quote — prices are shown below."
+          />
+
+          {/* Partner Actions with lead data */}
           <PartnerActions
             config={config}
             priceBreakdown={priceBreakdown}
             onRestart={handleRestart}
             onShareQuote={() => setShowQuoteModal(true)}
+            lead={leadData}
           />
         </div>
       </div>

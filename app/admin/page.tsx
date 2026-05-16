@@ -133,7 +133,7 @@ export default async function AdminDashboard() {
         <CardContent>
           {recentSubmissions && recentSubmissions.length > 0 ? (
             <div className="space-y-4">
-              {recentSubmissions.map((config) => {
+              {(recentSubmissions as any[]).map((config) => {
                 const hasContact = !!config.hubspot_contact_id;
                 const hasCompany = !!config.hubspot_company_id;
                 const hubspotConnected = hasContact || hasCompany;

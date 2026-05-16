@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
           };
 
           await Promise.allSettled(
-            adminsToNotify.map((admin) =>
+            adminsToNotify.map((admin: any) =>
               sendAdminNotificationEmail(admin.email, notificationData)
             )
           );

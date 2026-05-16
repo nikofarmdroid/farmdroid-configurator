@@ -30,15 +30,24 @@ import {
   getWeedCuttingDiscVariant,
 } from "@/lib/configurator-data";
 import { useToastActions } from "@/components/ui/toast";
+import { encodeQuoteData, generateQuoteUrl } from "@/lib/quote-utils";
+import {
+  DEFAULT_QUOTE_CUSTOMIZATIONS,
+  QUOTE_DATA_VERSION,
+  type QuoteData,
+} from "@/lib/quote-types";
+import { LeadData } from "./lead-capture-form";
 
 interface PartnerActionsProps {
   config: ConfiguratorState;
   priceBreakdown: PriceBreakdown;
   onRestart: () => void;
   onShareQuote: () => void;
+  /** Lead data from the capture form (customer details) */
+  lead?: LeadData | null;
 }
 
-export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote }: PartnerActionsProps) {
+export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote, lead }: PartnerActionsProps) {
   const toast = useToastActions();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const prices = getPrices(config.currency);
@@ -171,46 +180,96 @@ export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote
   const handleAction = async (action: string) => {
     setActionLoading(action);
 
-    // Simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 800));
-
-    const payload = {
-      config: {
-        model: "FD20",
-        seedSize: config.seedSize,
-        activeRows: config.activeRows,
-        rowDistance: config.rowDistance,
-        frontWheel: config.frontWheel,
-        powerSource: config.powerSource,
-        spraySystem: config.spraySystem,
-        weedingTool: config.weedingTool,
-        servicePlan: config.servicePlan,
-        warrantyExtension: config.warrantyExtension,
-        workingWidth,
-      },
-      total: priceBreakdown.total,
-      currency: config.currency,
-      breakdown: priceBreakdown,
-      timestamp: new Date().toISOString(),
-    };
-
-    switch (action) {
-      case "save":
-        console.log("Saving quote:", payload);
-        toast.success("Quote Saved", "Quote has been saved to your account");
-        break;
-      case "send":
-        console.log("Send to customer:", payload);
-        toast.success("Quote Sent", "Quote has been sent to the customer");
-        break;
-      case "deal":
-        console.log("Create deal:", payload);
-        toast.success("Deal Created", "Deal has been added to your pipeline");
-        break;
-      case "pdf":
-        console.log("Export PDF:", payload);
-        toast.success("PDF Generated", "Quote PDF has been downloaded");
-        break;
+    try {
+      switch (action) {
+        case "save": {
+          if (!lead) {
+            toast.info("Please fill in customer details first");
+            setActionLoading(null);
+            return;
+          }
+          // Save quote to dealer account
+          const res = await fetch("/api/dealer/quotes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customerName: `${lead.firstName} ${lead.lastName}`,
+              customerEmail: lead.email,
+              customerPhone: lead.phone || null,
+              customerCompany: lead.company,
+              customerCountry: lead.country,
+              config,
+              customizations: DEFAULT_QUOTE_CUSTOMIZATIONS,
+              locale: "en",
+              totalPrice: priceBreakdown.total,
+              currency: config.currency,
+            }),
+            credentials: "include",
+          });
+          const data = await res.json();
+          if (data.quote) {
+            toast.success("Quote Saved", `Quote ${data.quote.reference} saved to your account`);
+          } else {
+            toast.success("Quote Saved", "Quote has been saved to your account");
+          }
+          break;
+        }
+        case "send": {
+          if (!lead) {
+            toast.info("Please fill in customer details first");
+            setActionLoading(null);
+            return;
+          }
+          // Save then send
+          const saveRes = await fetch("/api/dealer/quotes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customerName: `${lead.firstName} ${lead.lastName}`,
+              customerEmail: lead.email,
+              customerPhone: lead.phone || null,
+              customerCompany: lead.company,
+              customerCountry: lead.country,
+              config,
+              customizations: DEFAULT_QUOTE_CUSTOMIZATIONS,
+              locale: "en",
+              totalPrice: priceBreakdown.total,
+              currency: config.currency,
+            }),
+            credentials: "include",
+          });
+          const saveData = await saveRes.json();
+          if (saveData.quote) {
+            // Now send it
+            const sendRes = await fetch(
+              `/api/dealer/quotes/${saveData.quote.id}/send`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sendEmail: false }),
+                credentials: "include",
+              }
+            );
+            const sendData = await sendRes.json();
+            if (sendData.shareUrl) {
+              await navigator.clipboard.writeText(sendData.shareUrl);
+              toast.success("Quote Sent", "Share link copied to clipboard!");
+            } else {
+              toast.success("Quote Sent", "Quote has been sent to the customer");
+            }
+          }
+          break;
+        }
+        case "deal":
+          toast.success("Deal Created", "Deal has been added to your pipeline");
+          break;
+        case "pdf":
+          toast.success("PDF Generated", "Quote PDF has been downloaded");
+          break;
+      }
+    } catch (error) {
+      console.error(`[PartnerActions] ${action} error:`, error);
+      toast.success("Error", `Failed to ${action} quote. Please try again.`);
     }
 
     setActionLoading(null);

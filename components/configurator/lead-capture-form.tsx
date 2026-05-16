@@ -164,9 +164,13 @@ interface LeadCaptureFormProps {
   initialLead?: LeadData | null;
   /** When true, form starts in "recognized" state: data shown in disabled fields with Edit/Go buttons */
   startAsRecognized?: boolean;
+  /** Override heading text (used in dealer/partner mode for customer-focused copy) */
+  heading?: string;
+  /** Override subheading text */
+  subheading?: string;
 }
 
-export function LeadCaptureForm({ config, priceBreakdown, onSubmit, initialLead, startAsRecognized }: LeadCaptureFormProps) {
+export function LeadCaptureForm({ config, priceBreakdown, onSubmit, initialLead, startAsRecognized, heading, subheading }: LeadCaptureFormProps) {
   const tPublic = useTranslations("publicMode");
   const t = useTranslations("publicMode.form");
   const tEmail = useTranslations("publicMode.emailFirst");
@@ -477,8 +481,8 @@ export function LeadCaptureForm({ config, priceBreakdown, onSubmit, initialLead,
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-stone-900">{tPublic("formHeading")}</h2>
-        <p className="text-sm text-stone-500 mt-1">{tPublic("formSubheading")}</p>
+        <h2 className="text-xl font-semibold text-stone-900">{heading || tPublic("formHeading")}</h2>
+        <p className="text-sm text-stone-500 mt-1">{subheading || tPublic("formSubheading")}</p>
       </div>
 
       {/* Email — First field, always enabled */}

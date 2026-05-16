@@ -17,28 +17,99 @@ function QuoteContent() {
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [source, setSource] = useState<"url" | "token" | null>(null);
 
   useEffect(() => {
-    const encoded = searchParams.get("d");
+    async function loadQuote() {
+      const encoded = searchParams.get("d");
+      const token = searchParams.get("t");
 
-    if (!encoded) {
-      setError("noData");
-      setIsLoading(false);
-      return;
-    }
+      // Token-based access (from dealer send)
+      if (token) {
+        try {
+          const res = await fetch(`/api/quotes/${token}`);
+          if (!res.ok) {
+            if (res.status === 410) {
+              const data = await res.json();
+              // Show expired quote
+              const expiredQuote = data.quote;
+              if (expiredQuote) {
+                // Convert to QuoteData format for the existing renderer
+                setQuoteData({
+                  version: 1,
+                  config: expiredQuote.config,
+                  customizations: {
+                    ...expiredQuote.customizations,
+                    notes: expiredQuote.customizations?.notes || "This quote has expired.",
+                    validUntil: expiredQuote.valid_until,
+                    createdAt: expiredQuote.created_at,
+                  },
+                  locale: expiredQuote.locale || "en",
+                });
+                setSource("token");
+                setIsLoading(false);
+                return;
+              }
+              setError("expired");
+              setIsLoading(false);
+              return;
+            }
+            setError("invalid");
+            setIsLoading(false);
+            return;
+          }
+          const data = await res.json();
+          const quote = data.quote;
+          if (quote) {
+            setQuoteData({
+              version: 1,
+              config: quote.config,
+              customizations: {
+                showPricing: true,
+                priceOverrides: quote.customizations?.priceOverrides || {},
+                discounts: quote.customizations?.discounts || {},
+                customLineItems: quote.customizations?.customLineItems || [],
+                lineItemOrder: quote.customizations?.lineItemOrder || [],
+                notes: quote.customizations?.notes || "",
+                validUntil: quote.valid_until || null,
+                createdAt: quote.created_at,
+              },
+              locale: quote.locale || "en",
+            });
+            setSource("token");
+            setIsLoading(false);
+            return;
+          }
+        } catch {
+          setError("invalid");
+          setIsLoading(false);
+          return;
+        }
+      }
 
-    try {
-      const decoded = decodeQuoteData(encoded);
-      if (decoded) {
-        setQuoteData(decoded);
-      } else {
+      // URL-encoded quote (legacy/quick share)
+      if (!encoded) {
+        setError("noData");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const decoded = decodeQuoteData(encoded);
+        if (decoded) {
+          setQuoteData(decoded);
+          setSource("url");
+        } else {
+          setError("invalid");
+        }
+      } catch {
         setError("invalid");
       }
-    } catch {
-      setError("invalid");
+
+      setIsLoading(false);
     }
 
-    setIsLoading(false);
+    loadQuote();
   }, [searchParams]);
 
   if (isLoading) {
