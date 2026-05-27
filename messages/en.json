@@ -168,7 +168,7 @@
     }
   },
   "baseRobot": {
-    "productTitle": "FD20 Robot V2.6",
+    "productTitle": "Select FarmDroid Model",
     "productDescription": "The autonomous seeding & weeding robot for precision farming",
     "baseConfiguration": "Base configuration",
     "included": "Included:",
@@ -195,6 +195,10 @@
     "views": {
       "sideView": "Side View",
       "frontView": "Front View"
+    },
+    "newRobot": {
+      "title": "New robot coming September 2026",
+      "subtitle": "Learn more at farmdroid.com"
     }
   },
   "wheelConfig": {

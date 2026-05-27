@@ -168,7 +168,7 @@
     }
   },
   "baseRobot": {
-    "productTitle": "FD20 Robot V2.6",
+    "productTitle": "Vælg FarmDroid Model",
     "productDescription": "Den autonome så- og lugerobot til præcisionslandbrug",
     "baseConfiguration": "Basiskonfiguration",
     "included": "Inkluderet:",
@@ -193,8 +193,12 @@
       "lithiumBatteries": "Lithium-batterier"
     },
     "views": {
-      "sideView": "Sidevisning",
-      "frontView": "Frontvisning"
+      "sideView": "Side View",
+      "frontView": "Front View"
+    },
+    "newRobot": {
+      "title": "Ny robot kommer september 2026",
+      "subtitle": "Læs mere på farmdroid.com"
     }
   },
   "wheelConfig": {

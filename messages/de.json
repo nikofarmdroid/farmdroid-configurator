@@ -168,7 +168,7 @@
     }
   },
   "baseRobot": {
-    "productTitle": "FD20 Roboter V2.6",
+    "productTitle": "FarmDroid Modell auswählen",
     "productDescription": "Der autonome Sä- und Hackroboter für Präzisionslandwirtschaft",
     "baseConfiguration": "Basiskonfiguration",
     "included": "Inklusive:",
@@ -193,8 +193,12 @@
       "lithiumBatteries": "Lithium-Batterien"
     },
     "views": {
-      "sideView": "Seitenansicht",
-      "frontView": "Frontansicht"
+      "sideView": "Side View",
+      "frontView": "Front View"
+    },
+    "newRobot": {
+      "title": "Neuer Roboter kommt September 2026",
+      "subtitle": "Mehr erfahren auf farmdroid.com"
     }
   },
   "wheelConfig": {

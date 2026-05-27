@@ -21,7 +21,21 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   // Check if user is authenticated and is an admin
-  const adminUser = await getAdminUser();
+  let adminUser = await getAdminUser();
+
+  // In local backend mode, provide a mock admin user
+  if (!adminUser && process.env.USE_LOCAL_BACKEND === "true") {
+    adminUser = {
+      auth: { email: "dev@farmdroid.local" } as any,
+      admin: {
+        id: "dev-admin",
+        email: "dev@farmdroid.local",
+        role: "super_admin",
+        name: "Dev Admin",
+        notify_on_new_config: true,
+      } as any,
+    };
+  }
 
   // Get the current path to determine if we're on the login page
   // The middleware handles actual protection, but we need to know

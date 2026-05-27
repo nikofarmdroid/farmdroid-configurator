@@ -166,6 +166,24 @@ export function StepBaseRobot({ config, priceBreakdown }: StepBaseRobotProps) {
           </div>
         </div>
 
+        {/* New Robot Teaser Card */}
+        <a
+          href="https://www.farmdroid.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group block rounded-xl p-4 md:p-5 border border-dashed border-stone-300 bg-stone-50/50 hover:border-emerald-400 hover:bg-emerald-50/30 transition-all duration-200"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-200 transition-colors">
+              <span className="text-lg">🚀</span>
+            </div>
+            <div>
+              <p className="font-medium text-stone-900 text-sm md:text-base">{t("newRobot.title")}</p>
+              <p className="text-xs md:text-sm text-stone-500 mt-0.5">{t("newRobot.subtitle")}</p>
+            </div>
+          </div>
+        </a>
+
         {/* Features */}
         <div className="pt-4">
           <p className="text-sm font-medium text-stone-700 mb-3">{t("included")}</p>

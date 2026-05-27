@@ -3,16 +3,15 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { generateConfigReference } from "@/lib/config-page-utils";
 import { createHubSpotEntities } from "@/lib/hubspot";
 import { sendAdminNotificationEmail } from "@/lib/emails/sendgrid";
-import type { ConfiguratorState } from "@/lib/configurator-data";
-import type { LeadData } from "@/components/configurator/lead-capture-form";
-
-interface CreateConfigurationRequest {
-  lead: LeadData;
-  config: ConfiguratorState;
-  locale: string;
-  totalPrice: number;
-  currency: string;
-}
+import {
+  BodyTooLargeError,
+  InvalidJsonError,
+  PriceMismatchError,
+  createConfigurationSchema,
+  readJsonBodyWithLimit,
+  validateSubmittedPrice,
+  zodErrorResponse,
+} from "@/lib/configuration-api-security";
 
 /**
  * POST /api/configurations
@@ -20,16 +19,18 @@ interface CreateConfigurationRequest {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: CreateConfigurationRequest = await request.json();
-    const { lead, config, locale, totalPrice, currency } = body;
+    const rawBody = await readJsonBodyWithLimit(request);
+    const parsed = createConfigurationSchema.safeParse(rawBody);
 
-    // Validate required fields
-    if (!lead || !config || !locale || totalPrice === undefined || !currency) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
+    if (!parsed.success) {
+      return zodErrorResponse(parsed.error);
     }
+
+    const { lead, locale } = parsed.data;
+    const { config, totalPrice, currency } = validateSubmittedPrice(
+      parsed.data.config,
+      parsed.data.totalPrice
+    );
 
     // Generate unique reference code
     let reference = generateConfigReference();

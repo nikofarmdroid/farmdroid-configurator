@@ -22,6 +22,7 @@ const ModeContext = createContext<ModeContextValue>({ mode: "public", showPrices
 // =============================================================================
 export function ModeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<AppMode>("public");
+  const [isDealer, setIsDealer] = useState(false);
 
   useEffect(() => {
     // Read mode from URL parameter
@@ -30,9 +31,13 @@ export function ModeProvider({ children }: { children: ReactNode }) {
     if (urlMode === "partner" || urlMode === "public") {
       setMode(urlMode);
     }
+
+    fetch("/api/dealer/auth/me")
+      .then((response) => setIsDealer(response.ok))
+      .catch(() => setIsDealer(false));
   }, []);
 
-  const showPrices = mode === "partner";
+  const showPrices = mode === "partner" || isDealer;
 
   return (
     <ModeContext.Provider value={{ mode, showPrices }}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Save,
@@ -40,7 +41,16 @@ interface PartnerActionsProps {
 
 export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote }: PartnerActionsProps) {
   const toast = useToastActions();
+  const router = useRouter();
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [customer, setCustomer] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    company: "",
+    country: "",
+  });
   const prices = getPrices(config.currency);
 
   const passiveRows = calculatePassiveRows(config.activeRows, config.rowDistance, config.rowSpacings);
@@ -168,11 +178,39 @@ export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote
     breakdown?: { count: number; unitPrice: number };
   }[];
 
+  const saveDealerQuote = async (status: "draft" | "sent") => {
+    if (!customer.first_name || !customer.email) {
+      toast.error("Customer required", "Enter at least customer first name and email.");
+      return null;
+    }
+
+    const response = await fetch("/api/dealer/quotes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        customer,
+        config_data: config,
+        total_price: priceBreakdown.total,
+        currency: config.currency,
+        status,
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      toast.error("Quote error", data.error || "Unable to save quote.");
+      return null;
+    }
+
+    if (status === "sent") {
+      await fetch(`/api/dealer/quotes/${data.quote.id}/send`, { method: "POST" });
+    }
+
+    return data.quote as { id: string };
+  };
+
   const handleAction = async (action: string) => {
     setActionLoading(action);
-
-    // Simulate processing
-    await new Promise((resolve) => setTimeout(resolve, 800));
 
     const payload = {
       config: {
@@ -197,11 +235,19 @@ export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote
     switch (action) {
       case "save":
         console.log("Saving quote:", payload);
-        toast.success("Quote Saved", "Quote has been saved to your account");
+        const savedQuote = await saveDealerQuote("draft");
+        if (savedQuote) {
+          toast.success("Quote Saved", "Quote has been saved to your account");
+          router.push(`/dealer/quotes/${savedQuote.id}`);
+        }
         break;
       case "send":
         console.log("Send to customer:", payload);
-        toast.success("Quote Sent", "Quote has been sent to the customer");
+        const sentQuote = await saveDealerQuote("sent");
+        if (sentQuote) {
+          toast.success("Quote Sent", "Quote share link has been generated");
+          router.push(`/dealer/quotes/${sentQuote.id}`);
+        }
         break;
       case "deal":
         console.log("Create deal:", payload);
@@ -226,6 +272,30 @@ export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote
         <p className="text-sm md:text-base text-stone-500 mt-1.5 md:mt-2">
           Review the configuration and take action
         </p>
+      </div>
+
+      <div className="rounded-lg border border-stone-200 bg-white p-4">
+        <h2 className="text-sm font-semibold text-stone-900">Customer details</h2>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {[
+            ["first_name", "First name", true],
+            ["last_name", "Last name", false],
+            ["email", "Email", true],
+            ["phone", "Phone", false],
+            ["company", "Company", false],
+            ["country", "Country", false],
+          ].map(([key, label, required]) => (
+            <input
+              key={key as string}
+              type={key === "email" ? "email" : "text"}
+              required={Boolean(required)}
+              placeholder={label as string}
+              value={customer[key as keyof typeof customer]}
+              onChange={(event) => setCustomer({ ...customer, [key as string]: event.target.value })}
+              className="h-10 rounded-md border border-stone-200 px-3 text-sm outline-none focus:border-[#5AB147] focus:ring-2 focus:ring-[#5AB147]/20"
+            />
+          ))}
+        </div>
       </div>
 
       {/* Price breakdown */}
@@ -338,7 +408,7 @@ export function PartnerActions({ config, priceBreakdown, onRestart, onShareQuote
             className="h-12 rounded-lg border border-stone-200 hover:border-stone-300 hover:bg-stone-50 text-stone-700 font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
           >
             <Send className="h-5 w-5" />
-            {actionLoading === "send" ? "Sending..." : "Send to Customer"}
+            {actionLoading === "send" ? "Sending..." : "Save and Send Quote"}
           </button>
         </div>
 

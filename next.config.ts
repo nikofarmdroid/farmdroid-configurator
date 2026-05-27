@@ -4,7 +4,7 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: ["100.110.200.76", "192.168.1.33", "localhost"],
 };
 
 export default withNextIntl(nextConfig);

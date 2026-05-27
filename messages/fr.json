@@ -168,7 +168,7 @@
     }
   },
   "baseRobot": {
-    "productTitle": "Robot FD20 V2.6",
+    "productTitle": "Sélectionnez le modèle FarmDroid",
     "productDescription": "Le robot autonome de semis et de désherbage pour l'agriculture de précision",
     "baseConfiguration": "Configuration de base",
     "included": "Inclus :",
@@ -193,8 +193,12 @@
       "lithiumBatteries": "Batteries lithium"
     },
     "views": {
-      "sideView": "Vue latérale",
-      "frontView": "Vue de face"
+      "sideView": "Side View",
+      "frontView": "Front View"
+    },
+    "newRobot": {
+      "title": "Nouveau robot en septembre 2026",
+      "subtitle": "En savoir plus sur farmdroid.com"
     }
   },
   "wheelConfig": {

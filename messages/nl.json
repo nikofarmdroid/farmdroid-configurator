@@ -168,7 +168,7 @@
     }
   },
   "baseRobot": {
-    "productTitle": "FD20 Robot V2.6",
+    "productTitle": "Selecteer FarmDroid Model",
     "productDescription": "De autonome zaai- en wiedrobot voor precisielandbouw",
     "baseConfiguration": "Basisconfiguratie",
     "included": "Inbegrepen:",
@@ -193,8 +193,12 @@
       "lithiumBatteries": "Lithiumbatterijen"
     },
     "views": {
-      "sideView": "Zijaanzicht",
-      "frontView": "Vooraanzicht"
+      "sideView": "Side View",
+      "frontView": "Front View"
+    },
+    "newRobot": {
+      "title": "Nieuwe robot komt september 2026",
+      "subtitle": "Meer informatie op farmdroid.com"
     }
   },
   "wheelConfig": {

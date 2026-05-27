@@ -42,14 +42,17 @@ export function decodeLeadData(encoded: string): LeadData | null {
 
 /**
  * Generate a short, memorable reference code
- * Format: FD-XXXXXX (6 alphanumeric chars after prefix)
+ * Format: FD-XXXXXXXXXXXX (12 alphanumeric chars after prefix)
  * Uses only unambiguous characters (no 0/O, 1/I/L)
  */
 export function generateConfigReference(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let result = "FD-";
-  for (let i = 0; i < 6; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  const values = new Uint32Array(12);
+  globalThis.crypto.getRandomValues(values);
+
+  for (let i = 0; i < values.length; i++) {
+    result += chars.charAt(values[i] % chars.length);
   }
   return result;
 }

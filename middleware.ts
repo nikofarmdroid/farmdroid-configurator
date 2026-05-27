@@ -9,10 +9,31 @@ const intlMiddleware = createIntlMiddleware(routing);
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Handle dealer portal routes. API routes validate sessions server-side.
+  if (pathname.startsWith("/dealer")) {
+    if (pathname === "/dealer/login" || pathname === "/dealer/register") {
+      return NextResponse.next();
+    }
+
+    const hasDealerSession = request.cookies.has("farmdroid_dealer_session");
+    if (!hasDealerSession) {
+      const loginUrl = new URL("/dealer/login", request.url);
+      loginUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    return NextResponse.next();
+  }
+
   // Handle admin routes
   if (pathname.startsWith("/admin")) {
     // Allow access to login page and auth callback without authentication
     if (pathname === "/admin/login" || pathname.startsWith("/admin/auth")) {
+      return NextResponse.next();
+    }
+
+    // Skip auth in local backend mode
+    if (process.env.USE_LOCAL_BACKEND === "true") {
       return NextResponse.next();
     }
 
@@ -82,5 +103,5 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   // Match admin routes and locale routes
-  matcher: ["/", "/(da|de|en|fr|nl)/:path*", "/admin/:path*"],
+  matcher: ["/", "/(da|de|en|fr|nl)/:path*", "/admin/:path*", "/dealer/:path*"],
 };
